@@ -1,0 +1,16 @@
+4. Write a pig script to find no of complaints filed with product type has "Debt collection" for the year 2015
+
+REGISTER '/home/acadgild/pig-0.14.0/lib/piggybank.jar';  //Register the jar to load the csv file.
+DEFINE CSVLoader org.apache.pig.piggybank.storage.CSVLoader();
+
+A = load'/Consumer_Complaints.csv' using CSVLoader(',') as (f1:chararray,f2:chararray);
+B = filter A by f2=='Debt collection' and GetYear(ToDate(f1,'MM/dd/yyyy'))==2015;
+C = foreach B generate f1 as complaintDate,f2 as product;
+D = group C by (complaintDate,product);
+E = foreach D generate FLATTEN(group)as (complaintDate,product),COUNT(C.product) as numofcomplaints;
+store E into '/output/fourth' using PigStorage(',');
+
+export into mysql:
+sqoop export --connect jdbc:mysql://localhost/test --username root --table complaints_with_DebtCollection -m 1 --export-dir '/output/fourth/'
+
+Output : 31828

@@ -1,0 +1,34 @@
+3. Write a pig script to find list of companies toping in complaint chart (companies with maximum number of complaints)
+
+REGISTER '/home/acadgild/pig-0.14.0/lib/piggybank.jar';  //Register the jar to load the csv file.
+DEFINE CSVLoader org.apache.pig.piggybank.storage.CSVLoader();
+
+A = load'/Consumer_Complaints.csv' using CSVLoader(',');
+B = foreach A generate $7 as company,$15 as id;
+C = group B by company;
+D = foreach C generate REPLACE(group,',',' '),COUNT(B.id) as numofcomplaints;
+E = Order D by numofcomplaints desc;
+F = limit E 100;
+
+store F into '/output/third' using PigStorage(',');
+
+export into mysql:
+sqoop export --connect jdbc:mysql://localhost/test --username root --table companies_with_max_number_of_complaints -m 1 --export-dir '/output/third/'
+
+
+Output : 
+
++---------------------+---------------+
+| Company_Name        | Complaint_Cnt |
++---------------------+---------------+
+| Bank of America     |         51127 |
+| Wells Fargo         |         37182 |
+| JPMorgan Chase      |         29583 |
+| Experian            |         24720 |
+| Equifax             |         24706 |
+| Citibank            |         22136 |
+| TransUnion          |         20054 |
+| Ocwen               |         18868 |
+| Capital One         |         13636 |
+| Nationstar Mortgage |         11401 |
++---------------------+---------------+

@@ -1,0 +1,23 @@
+1. Write a pig script to find no of complaints which got timely response
+
+REGISTER '/home/acadgild/pig-0.14.0/lib/piggybank.jar';  //Register the jar to load the csv file.
+DEFINE CSVLoader org.apache.pig.piggybank.storage.CSVLoader();
+
+
+A = load'/Consumer_Complaints.csv' using CSVLoader(',');
+B = foreach A generate $15 as id,$13 as timely;
+C = filter B by timely=='Yes';
+D = foreach C generate id,timely;
+E = group D by timely;
+F = foreach E generate group,COUNT(D.id) as numofcomplaints;
+
+store F into '/output/first' using PigStorage(',');
+
+export into mysql:
+sqoop export --connect jdbc:mysql://localhost/test --username root --table timely_response_of_complaints  -m 1 --export-dir '/output/first/'
+
+Output : 455383
+
+
+
+

@@ -1,0 +1,20 @@
+2. Write a pig script to find no of complaints where consumer forum forwarded the complaint same day they received to respective company
+
+REGISTER '/home/acadgild/pig-0.14.0/lib/piggybank.jar';  //Register the jar to load the csv file.
+DEFINE CSVLoader org.apache.pig.piggybank.storage.CSVLoader();
+
+A = load'/Consumer_Complaints.csv' using CSVLoader(',') as(f1:chararray,f2:chararray,f3:chararray,f4:chararray,f5:chararray,f6:chararray,f7:chararray,f8:chararray,f9:chararray,f10:chararray,f11:chararray,f12:chararray,f13:chararray,f14:chararray,f15:chararray,f16:chararray);
+B = foreach A generate f1 as compdate,f12 as forwdate,f16 as id;
+C = filter B by id!='Complaint ID';
+D = foreach C generate compdate,forwdate,id;
+E = filter D by compdate==forwdate ;
+F = foreach E generate compdate as complaint_date,forwdate as forward_date,id;
+G = group F by (complaint_date,forward_date);
+H = foreach G generate FLATTEN(group) as (complaint_date,forward_date),COUNT(F.id)as noofcomplaits; 
+
+store H into '/output/second' using PigStorage(',');
+
+export into mysql:
+sqoop export --connect jdbc:mysql://localhost/test --username root --table consumer_forum_action -m 1 --export-dir '/output/second/'
+
+Output : 161004
